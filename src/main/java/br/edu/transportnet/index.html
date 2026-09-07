@@ -1,11 +1,122 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>TransportNet - Análise de Rotas e Grafos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <!-- Link para o arquivo CSS externo -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🚇</div>
+                <div>
+                    <h1>TransportNet</h1>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Seleção de Rota</h2>
+                <div class="form-group">
+                    <label for="origem">Estação de Origem</label>
+                    <input type="text" id="origem" placeholder="Digite o nome da estação..." autocomplete="off">
+                    <small id="origemSugest" style="display: block; margin-top: 5px; color: #999; font-size: 11px;"></small>
+                </div>
+                <div class="form-group">
+                    <label for="destino">Estação de Destino</label>
+                    <input type="text" id="destino" placeholder="Digite o nome da estação..." autocomplete="off">
+                    <small id="destinoSugest" style="display: block; margin-top: 5px; color: #999; font-size: 11px;"></small>
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="calcularRota()">Calcular Rota</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Algoritmos de Caminho</h2>
+                <div class="algorithm-tabs">
+                    <button class="tab-btn active" onclick="selecionarAlgoritmo('dijkstra')">Dijkstra</button>
+                    <button class="tab-btn" onclick="selecionarAlgoritmo('astar')">A*</button>
+                </div>
+                <div id="resultadoCaminho" class="results" style="display: none;">
+                    <div class="result-item">
+                        <span class="result-label">Custo:</span>
+                        <span class="result-value" id="custoCaminho">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Tempo:</span>
+                        <span class="result-value" id="tempoCaminho">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Nós Expandidos:</span>
+                        <span class="result-value" id="nosExpandidos">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Linhas:</span>
+                        <span class="result-value" id="linhasCaminho">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Análise de Grafos</h2>
+                <div class="form-group">
+                    <button class="btn-secondary" style="width: 100%;" onclick="analisarMST('kruskal')">MST - Kruskal</button>
+                </div>
+                <div class="form-group">
+                    <button class="btn-secondary" style="width: 100%;" onclick="analisarMST('prim')">MST - Prim</button>
+                </div>
+                <div class="form-group">
+                    <button class="btn-secondary" style="width: 100%;" onclick="analisarSCC()">SCC - Kosaraju</button>
+                </div>
+                <div id="resultadoGrafo" style="display: none;">
+                    <div class="results">
+                        <div class="result-item">
+                            <span class="result-label">Peso Total:</span>
+                            <span class="result-value" id="pesoMST">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Arestas:</span>
+                            <span class="result-value" id="arestasMST">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Tempo Execução:</span>
+                            <span class="result-value" id="tempoGrafo">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Visualização</h2>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #d32f2f;"></div>
+                        <span>Rota (Dijkstra/A*)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #388e3c;"></div>
+                        <span>MST (Kruskal/Prim)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #1976d2;"></div>
+                        <span>Componentes SCC</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f57f17;"></div>
+                        <span>Estações-Armadilha</span>
+                    </div>
+                </div>
+                <button class="btn-secondary" style="width: 100%;" onclick="limparMapa()">Limpar Mapa</button>
+            </div>
+        </div>
+
+        <div class="map-container">
+            <div id="mapa"></div>
+        </div>
+    </div>
 </body>
 </html>
