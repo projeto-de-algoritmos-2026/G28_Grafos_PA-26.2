@@ -118,5 +118,188 @@
             <div id="mapa"></div>
         </div>
     </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        // Inicialização do mapa
+        const mapa = L.map('mapa').setView([-23.5505, -46.6333], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(mapa);
+
+        // Estado da aplicação
+        let estadoApp = {
+            algoritmoSelecionado: 'dijkstra',
+            modoVisualizacao: 'rota',
+            camadaRota: null,
+            camadaMST: null,
+            camadaSCC: null,
+            marcadores: [],
+            estacoes: [],
+            grafo: null
+        };
+
+        // Dados simulados de estações (substituir com dados reais do backend)
+        const estacoesSimuladas = [
+            { id: 0, nome: 'Se', lat: -23.5505, lon: -46.6333 },
+            { id: 1, nome: 'Luz', lat: -23.5416, lon: -46.6562 },
+            { id: 2, nome: 'República', lat: -23.5497, lon: -46.6575 },
+            { id: 3, nome: 'Anhangabaú', lat: -23.5544, lon: -46.6622 },
+            { id: 4, nome: 'São Bento', lat: -23.5555, lon: -46.6344 },
+            { id: 5, nome: 'Liberdade', lat: -23.5599, lon: -46.6361 },
+            { id: 6, nome: 'Paraíso', lat: -23.5689, lon: -46.6450 },
+            { id: 7, nome: 'Brigadeiro', lat: -23.5720, lon: -46.6572 },
+            { id: 8, nome: 'Consolação', lat: -23.5539, lon: -46.6694 },
+            { id: 9, nome: 'Mackenzie', lat: -23.5571, lon: -46.6775 }
+        ];
+
+        estadoApp.estacoes = estacoesSimuladas;
+
+        // Autocomplete
+        function configurarAutocomplete(inputId, sugestId) {
+            document.getElementById(inputId).addEventListener('input', (e) => {
+                const valor = e.target.value.toLowerCase();
+                const sugestoes = estadoApp.estacoes
+                    .filter(e => e.nome.toLowerCase().includes(valor))
+                    .slice(0, 3);
+                
+                const html = sugestoes
+                    .map(e => `<span style="cursor: pointer; margin-right: 8px; color: #1976d2;" onclick="selecionarEstacao('${inputId}', '${e.nome}')">${e.nome}</span>`)
+                    .join(' • ');
+                
+                document.getElementById(sugestId).innerHTML = html;
+            });
+        }
+
+        configurarAutocomplete('origem', 'origemSugest');
+        configurarAutocomplete('destino', 'destinoSugest');
+
+        function selecionarEstacao(inputId, nome) {
+            document.getElementById(inputId).value = nome;
+            document.getElementById(inputId).parentElement.querySelector('small').innerHTML = '';
+        }
+
+        // Calcular rota
+        function calcularRota() {
+            const origem = document.getElementById('origem').value;
+            const destino = document.getElementById('destino').value;
+
+            if (!origem || !destino) {
+                mostrarErro('Selecione origem e destino');
+                return;
+            }
+
+            const estacaoOrigem = estadoApp.estacoes.find(e => e.nome.toLowerCase() === origem.toLowerCase());
+            const estacaoDestino = estadoApp.estacoes.find(e => e.nome.toLowerCase() === destino.toLowerCase());
+
+            if (!estacaoOrigem || !estacaoDestino) {
+                mostrarErro('Estações não encontradas');
+                return;
+            }
+
+            // Simular cálculo (substituir com chamada real ao backend)
+            const rota = [estacaoOrigem.id, 1, 2, 3, estacaoDestino.id];
+            visualizarRota(rota);
+
+            // Simular resultado
+            document.getElementById('resultadoCaminho').style.display = 'block';
+            document.getElementById('custoCaminho').textContent = (Math.random() * 900 + 300).toFixed(0) + 's';
+            document.getElementById('tempoCaminho').textContent = '12m 45s';
+            document.getElementById('nosExpandidos').textContent = Math.floor(Math.random() * 150 + 50);
+            document.getElementById('linhasCaminho').textContent = 'Linha 1, Linha 3';
+        }
+
+        function visualizarRota(rota) {
+            // Remover rota anterior
+            if (estadoApp.camadaRota) {
+                mapa.removeLayer(estadoApp.camadaRota);
+            }
+
+            // Desenhar rota
+            const coordenadas = rota.map(id => {
+                const estacao = estadoApp.estacoes.find(e => e.id === id);
+                return [estacao.lat, estacao.lon];
+            });
+
+            estadoApp.camadaRota = L.polyline(coordenadas, {
+                color: '#d32f2f',
+                weight: 3,
+                opacity: 0.8,
+                dashArray: '5, 5'
+            }).addTo(mapa);
+
+            // Marcadores
+            estadoApp.marcadores.forEach(m => mapa.removeLayer(m));
+            estadoApp.marcadores = [];
+
+            rota.forEach((id, idx) => {
+                const estacao = estadoApp.estacoes.find(e => e.id === id);
+                const cor = idx === 0 ? '#388e3c' : (idx === rota.length - 1 ? '#d32f2f' : '#1976d2');
+                
+                const marcador = L.circleMarker([estacao.lat, estacao.lon], {
+                    radius: 6,
+                    fillColor: cor,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).bindPopup(estacao.nome).addTo(mapa);
+                
+                estadoApp.marcadores.push(marcador);
+            });
+
+            mapa.fitBounds(L.polyline(coordenadas).getBounds());
+        }
+
+        // Análise de MST
+        function analisarMST(algoritmo) {
+            document.getElementById('resultadoGrafo').style.display = 'block';
+            document.getElementById('pesoMST').textContent = (Math.random() * 50000 + 10000).toFixed(2) + 's';
+            document.getElementById('arestasMST').textContent = Math.floor(Math.random() * 120 + 80);
+            document.getElementById('tempoGrafo').textContent = (Math.random() * 500 + 50).toFixed(1) + 'ms';
+
+            // Simular visualização da MST
+            const coordenadas = estadoApp.estacoes.slice(0, 5).map(e => [e.lat, e.lon]);
+            if (estadoApp.camadaMST) mapa.removeLayer(estadoApp.camadaMST);
+            estadoApp.camadaMST = L.polyline(coordenadas, {
+                color: '#388e3c',
+                weight: 2,
+                opacity: 0.6
+            }).addTo(mapa);
+        }
+
+        // Análise de SCC
+        function analisarSCC() {
+            document.getElementById('resultadoGrafo').style.display = 'block';
+            document.getElementById('pesoMST').innerHTML = '<strong>Componentes:</strong> 8';
+            document.getElementById('arestasMST').innerHTML = '<strong>Maior:</strong> 45 estações';
+            document.getElementById('tempoGrafo').innerHTML = '<strong>Armadilhas:</strong> 5';
+        }
+
+        // Seleção de algoritmo
+        function selecionarAlgoritmo(algoritmo) {
+            estadoApp.algoritmoSelecionado = algoritmo;
+            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Limpar mapa
+        function limparMapa() {
+            if (estadoApp.camadaRota) mapa.removeLayer(estadoApp.camadaRota);
+            if (estadoApp.camadaMST) mapa.removeLayer(estadoApp.camadaMST);
+            if (estadoApp.camadaSCC) mapa.removeLayer(estadoApp.camadaSCC);
+            estadoApp.marcadores.forEach(m => mapa.removeLayer(m));
+            estadoApp.marcadores = [];
+            document.getElementById('resultadoCaminho').style.display = 'none';
+            document.getElementById('resultadoGrafo').style.display = 'none';
+            mapa.setView([-23.5505, -46.6333], 12);
+        }
+
+        function mostrarErro(msg) {
+            alert(msg); // Substituir com notificação mais elegante se necessário
+        }
+    </script>
 </body>
 </html>
