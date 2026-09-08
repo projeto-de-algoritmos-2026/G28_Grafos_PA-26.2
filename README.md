@@ -33,7 +33,7 @@ O **TransportNet** é uma aplicação desenvolvida para simular o funcionamento 
 
 | Tela Inicial / Seleção de Rota | Visualização do Caminho Mínimo (Dijkstra/A*) | Análise de Grafos (MST / SCC) |
 | :---: | :---: | :---: |
-| ![Screenshot 1](data/imgs/selecaoRota.png) | ![Screenshot 2](caminho/para/print2.png) | ![Screenshot 3](caminho/para/print3.png) |
+| ![Screenshot 1](data/imgs/selecaoRota.png) | ![Screenshot 2](data/imgs/djisktra.png) | ![Screenshot 3](data/imgs/mst.png) |
 
 ---
 
