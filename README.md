@@ -1,6 +1,6 @@
 # G28_Grafos_PA-26.2
 
-# Rede de Metrôs do DF
+# Rede de Metrôs de SP
 
 ##Alunos
 
